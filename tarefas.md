@@ -1,0 +1,29 @@
+# Lista de Tarefas do Agendador de Status WhatsApp
+
+- [ ] Inicialização do Projeto <!-- id: 0 -->
+    - [ ] Criar estrutura do projeto (cliente/servidor) <!-- id: 1 -->
+    - [ ] Inicializar frontend (Vite + React + Tailwind) <!-- id: 2 -->
+    - [ ] Inicializar backend (Node + Express) <!-- id: 3 -->
+    - [ ] Configurar Banco de Dados (Prisma + SQLite) <!-- id: 4 -->
+- [ ] Implementação do Backend <!-- id: 5 -->
+    - [ ] Implementar Gerenciador de Clientes WhatsApp (whatsapp-web.js) <!-- id: 6 -->
+        - [ ] Geração/Emparelhamento de QR Code <!-- id: 7 -->
+        - [ ] Manipulação de múltiplas sessões <!-- id: 8 -->
+    - [ ] Implementar Sistema de Upload de Arquivos (Multer) <!-- id: 9 -->
+    - [ ] Implementar Lógica de Agendamento (Cron/Timer) <!-- id: 10 -->
+        - [ ] Lógica de repetição flexível (diária, semanal, personalizada) <!-- id: 11 -->
+    - [ ] Endpoints da API para interação com o frontend <!-- id: 12 -->
+- [ ] Implementação do Frontend <!-- id: 13 -->
+    - [ ] Layout do Dashboard (Barra Lateral, Cabeçalho) <!-- id: 14 -->
+    - [ ] Página de Conexão do WhatsApp (Exibição de QR Code) <!-- id: 15 -->
+    - [ ] Página de Criação de Status <!-- id: 16 -->
+        - [ ] Upload de mídia <!-- id: 17 -->
+        - [ ] Entrada de Legenda/Link <!-- id: 18 -->
+        - [ ] Controles de agendamento <!-- id: 19 -->
+        - [ ] Seleção de conta alvo <!-- id: 20 -->
+    - [ ] Visualização de Trabalhos Agendados (Lista/Calendário) <!-- id: 21 -->
+- [ ] Verificação e Testes <!-- id: 22 -->
+    - [ ] Testar conexão WA <!-- id: 23 -->
+    - [ ] Testar Postagem de Status (Imediato) <!-- id: 24 -->
+    - [ ] Testar Postagem Agendada <!-- id: 25 -->
+    - [ ] Testar Lógica de Repetição <!-- id: 26 -->

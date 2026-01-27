@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Account {
+  id          String   @id @default(uuid())
+  name        String
+  phoneNumber String?
+  status      String   @default("disconnected") // connected, disconnected, qr_pending
+  sessionData String?  // JSON string para dados de sessão
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  jobs        Job[]
+}
+
+model Job {
+  id          String   @id @default(uuid())
+  accountId   String
+  account     Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  mediaPath   String?
+  caption     String?
+  scheduledAt DateTime
+  status      String   @default("pending") // pending, sent, failed
+  repeatType  String?  // daily, weekly, custom
+  repeatDays  String?  // JSON array para dias da semana
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  executedAt  DateTime?
+}
+
+model Media {
+  id        String   @id @default(uuid())
+  filename  String
+  mimetype  String
+  path      String
+  size      Int
+  createdAt DateTime @default(now())
+}

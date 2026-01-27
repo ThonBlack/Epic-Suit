@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  server:
+    build: ./server
+    container_name: epic-suit-server
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./server/sessions:/app/sessions
+      - ./server/uploads:/app/uploads
+      - ./server/prisma:/app/prisma
+    restart: unless-stopped
+
+  client:
+    build: ./client
+    container_name: epic-suit-client
+    ports:
+      - "8080:80"
+    depends_on:
+      - server
+    restart: unless-stopped
