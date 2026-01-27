@@ -87,28 +87,33 @@ class WAClientManager {
       console.log(`✅ Cliente ${account.name} está pronto!`);
       const info = client.info;
 
-      // Reseta tentativas de reconexão ao conectar com sucesso
-      this.reconnectAttempts.delete(accountId);
+      // Atualiza apenas o número de telefone quando estiver pronto
+      if (info?.wid?.user) {
+        await this.prisma.account.update({
+          where: { id: accountId },
+          data: { phoneNumber: info.wid.user }
+        });
+      }
 
+      this.reconnectAttempts.delete(accountId);
+    });
+
+    client.on('authenticated', async () => {
+      console.log(`🔐 Cliente ${account.name} autenticado`);
+
+      // Marca como conectado imediatamente ao autenticar
       await this.prisma.account.update({
         where: { id: accountId },
-        data: {
-          status: 'connected',
-          phoneNumber: info?.wid?.user || null
-        }
+        data: { status: 'connected' }
       });
 
       this.io.emit(`status:${accountId}`, 'connected');
       this.io.emit('notification', {
         type: 'success',
         title: 'WhatsApp Conectado',
-        message: `A conta "${account.name}" está conectada e pronta para enviar status!`,
+        message: `A conta "${account.name}" foi autenticada com sucesso!`,
         accountId
       });
-    });
-
-    client.on('authenticated', () => {
-      console.log(`🔐 Cliente ${account.name} autenticado`);
     });
 
     client.on('auth_failure', async (message) => {
