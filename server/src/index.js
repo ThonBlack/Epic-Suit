@@ -125,6 +125,9 @@ app.get('/api/jobs', async (req, res) => {
 // Criar novo job (agendamento)
 app.post('/api/jobs', upload.single('media'), async (req, res) => {
     try {
+        console.log('📝 Recebendo novo agendamento:', req.body);
+        console.log('📁 Arquivo recebido:', req.file ? req.file.filename : 'Nenhum');
+
         const { accountId, caption, scheduledAt, repeatType, repeatDays } = req.body;
 
         const job = await prisma.job.create({
@@ -138,8 +141,10 @@ app.post('/api/jobs', upload.single('media'), async (req, res) => {
             }
         });
 
+        console.log('✅ Agendamento criado com sucesso:', job.id);
         res.json(job);
     } catch (error) {
+        console.error('❌ Erro ao criar agendamento:', error);
         res.status(500).json({ error: error.message });
     }
 });
