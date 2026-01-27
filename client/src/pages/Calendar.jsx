@@ -363,7 +363,7 @@ export default function Calendar() {
                                                 <div className="flex items-start gap-3">
                                                     {job.mediaPath && (
                                                         <img
-                                                            src={`http://localhost:3001/uploads/${job.mediaPath}`}
+                                                            src={`/uploads/${job.mediaPath}`}
                                                             alt=""
                                                             className="w-12 h-12 rounded-lg object-cover"
                                                             onError={(e) => e.target.style.display = 'none'}

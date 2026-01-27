@@ -46,7 +46,7 @@ export default function Settings() {
                                     Online
                                 </span>
                             </div>
-                            <p className="text-sm text-[var(--text-muted)]">http://localhost:3001</p>
+                            <p className="text-sm text-[var(--text-muted)]">/api</p>
                         </div>
                         <div className="p-4 bg-[var(--surface-light)] rounded-xl">
                             <div className="flex items-center justify-between mb-2">

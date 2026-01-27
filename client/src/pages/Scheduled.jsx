@@ -99,8 +99,8 @@ export default function Scheduled() {
                     <button
                         onClick={() => setFilter('all')}
                         className={`p-4 rounded-xl transition-all ${filter === 'all'
-                                ? 'bg-[var(--primary)] text-white'
-                                : 'glass hover:border-[var(--primary)]/50'
+                            ? 'bg-[var(--primary)] text-white'
+                            : 'glass hover:border-[var(--primary)]/50'
                             }`}
                     >
                         <p className="text-2xl font-bold">{stats.total}</p>
@@ -109,8 +109,8 @@ export default function Scheduled() {
                     <button
                         onClick={() => setFilter('pending')}
                         className={`p-4 rounded-xl transition-all ${filter === 'pending'
-                                ? 'bg-amber-500 text-white'
-                                : 'glass hover:border-amber-500/50'
+                            ? 'bg-amber-500 text-white'
+                            : 'glass hover:border-amber-500/50'
                             }`}
                     >
                         <p className="text-2xl font-bold">{stats.pending}</p>
@@ -119,8 +119,8 @@ export default function Scheduled() {
                     <button
                         onClick={() => setFilter('sent')}
                         className={`p-4 rounded-xl transition-all ${filter === 'sent'
-                                ? 'bg-emerald-500 text-white'
-                                : 'glass hover:border-emerald-500/50'
+                            ? 'bg-emerald-500 text-white'
+                            : 'glass hover:border-emerald-500/50'
                             }`}
                     >
                         <p className="text-2xl font-bold">{stats.sent}</p>
@@ -129,8 +129,8 @@ export default function Scheduled() {
                     <button
                         onClick={() => setFilter('failed')}
                         className={`p-4 rounded-xl transition-all ${filter === 'failed'
-                                ? 'bg-red-500 text-white'
-                                : 'glass hover:border-red-500/50'
+                            ? 'bg-red-500 text-white'
+                            : 'glass hover:border-red-500/50'
                             }`}
                     >
                         <p className="text-2xl font-bold">{stats.failed}</p>
@@ -165,7 +165,7 @@ export default function Scheduled() {
                                     {job.mediaPath && (
                                         <div className="w-20 h-20 rounded-xl bg-[var(--surface-light)] flex items-center justify-center overflow-hidden flex-shrink-0">
                                             <img
-                                                src={`http://localhost:3001/uploads/${job.mediaPath}`}
+                                                src={`/uploads/${job.mediaPath}`}
                                                 alt="Preview"
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => {
