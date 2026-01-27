@@ -101,11 +101,16 @@ class WAClientManager {
     client.on('authenticated', async () => {
       console.log(`🔐 Cliente ${account.name} autenticado`);
 
-      // Marca como conectado imediatamente ao autenticar
-      await this.prisma.account.update({
-        where: { id: accountId },
-        data: { status: 'connected' }
-      });
+      try {
+        // Marca como conectado imediatamente ao autenticar
+        const updated = await this.prisma.account.update({
+          where: { id: accountId },
+          data: { status: 'connected' }
+        });
+        console.log(`✅ DB Atualizado para connected: ${updated.id} - Status: ${updated.status}`);
+      } catch (dbError) {
+        console.error(`❌ Erro ao atualizar DB no authenticated: ${dbError.message}`);
+      }
 
       this.io.emit(`status:${accountId}`, 'connected');
       this.io.emit('notification', {
