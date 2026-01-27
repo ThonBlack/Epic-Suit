@@ -57,8 +57,11 @@ export default function Accounts() {
         }
     };
 
+    const [isCreating, setIsCreating] = useState(false);
+
     const createAccount = async (e) => {
         e.preventDefault();
+        setIsCreating(true);
         try {
             const response = await api.post('/accounts', { name: newAccountName });
             setAccounts([response.data, ...accounts]);
@@ -66,6 +69,9 @@ export default function Accounts() {
             setShowModal(false);
         } catch (error) {
             console.error('Erro ao criar conta:', error);
+            alert('Erro ao criar conta. Verifique o console para mais detalhes.');
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -187,10 +193,17 @@ export default function Accounts() {
                                         Cancelar
                                     </button>
                                     <button
-                                        type="submit"
-                                        className="flex-1 py-3 gradient-primary rounded-xl font-medium hover:opacity-90 transition-opacity"
+                                        disabled={isCreating}
+                                        className="flex-1 py-3 gradient-primary rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
-                                        Criar
+                                        {isCreating ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                Criando...
+                                            </>
+                                        ) : (
+                                            'Criar'
+                                        )}
                                     </button>
                                 </div>
                             </form>
