@@ -32,7 +32,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 fixed top-0 left-0 h-screen w-64 bg-[var(--surface)] border-r border-[var(--border)] flex flex-col z-50
                 transition-transform duration-300 ease-in-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-                md:transform-none md:static
+                md:translate-x-0 md:fixed
             `}>
                 {/* Logo & Close Button */}
                 <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
