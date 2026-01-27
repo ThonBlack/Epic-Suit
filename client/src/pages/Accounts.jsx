@@ -50,10 +50,24 @@ export default function Accounts() {
         try {
             const response = await api.get('/accounts');
             setAccounts(response.data);
+            return response.data; // Retorna para uso no Manual Check
         } catch (error) {
             console.error('Erro ao buscar contas:', error);
+            return [];
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleManualCheck = async () => {
+        const updatedAccounts = await fetchAccounts();
+        const account = updatedAccounts.find(acc => acc.id === connectingId);
+
+        if (account?.status === 'connected') {
+            setQrCode(null);
+            setConnectingId(null);
+        } else {
+            alert('Ainda não detectamos a conexão completa. Aguarde alguns segundos e tente novamente.');
         }
     };
 
@@ -157,15 +171,24 @@ export default function Accounts() {
                             <div className="bg-white p-4 rounded-xl mb-6">
                                 <img src={qrCode} alt="QR Code" className="w-full" />
                             </div>
-                            <button
-                                onClick={() => {
-                                    setQrCode(null);
-                                    setConnectingId(null);
-                                }}
-                                className="w-full py-3 bg-[var(--surface-light)] rounded-xl hover:bg-[var(--border)] transition-colors"
-                            >
-                                Cancelar
-                            </button>
+                            <div className="flex flex-col gap-2">
+                                <button
+                                    onClick={handleManualCheck}
+                                    className="w-full py-3 gradient-primary rounded-xl font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                                >
+                                    <Wifi className="w-5 h-5" />
+                                    Já Escaneei
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setQrCode(null);
+                                        setConnectingId(null);
+                                    }}
+                                    className="w-full py-3 bg-[var(--surface-light)] rounded-xl hover:bg-[var(--border)] transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
