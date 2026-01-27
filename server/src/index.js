@@ -53,9 +53,7 @@ const scheduler = new Scheduler(prisma, waManager, io);
 // Listar todas as contas
 app.get('/api/accounts', async (req, res) => {
     try {
-        const accounts = await prisma.account.findMany({
-            orderBy: { createdAt: 'desc' }
-        });
+        const accounts = await waManager.getStatus();
         res.json(accounts);
     } catch (error) {
         res.status(500).json({ error: error.message });
