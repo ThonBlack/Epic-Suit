@@ -51,6 +51,7 @@ class WAClientManager {
         dataPath: this.sessionsPath
       }),
       puppeteer: {
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
         headless: true,
         args: [
           '--no-sandbox',
@@ -59,6 +60,7 @@ class WAClientManager {
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
           '--no-zygote',
+          '--single-process',
           '--disable-gpu'
         ]
       }

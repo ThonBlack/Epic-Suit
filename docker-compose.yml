@@ -6,6 +6,7 @@ services:
     container_name: epic-suit-server
     ports:
       - "3001:3001"
+    shm_size: '2gb'
     volumes:
       - ./server/sessions:/app/sessions
       - ./server/uploads:/app/uploads
