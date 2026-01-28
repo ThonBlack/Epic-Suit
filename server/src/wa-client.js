@@ -204,6 +204,19 @@ class WAClientManager {
 
     setTimeout(async () => {
       try {
+        // Verifica se a conta JÁ ESTÁ CONECTADA antes de fazer qualquer coisa
+        if (this.isConnected(accountId)) {
+          console.log(`✅ Conta ${accountName} já está conectada! Cancelando tentativas de reconexão.`);
+          this.reconnectAttempts.delete(accountId);
+          this.io.emit('notification', {
+            type: 'success',
+            title: 'Reconectado',
+            message: `A conta "${accountName}" reconectou com sucesso!`,
+            accountId
+          });
+          return;
+        }
+
         // Verifica se a conta ainda existe e não foi desconectada manualmente
         const account = await this.prisma.account.findUnique({
           where: { id: accountId }
@@ -217,13 +230,14 @@ class WAClientManager {
 
         // Tenta destruir instância anterior se existir para liberar locks
         if (this.clients.has(accountId)) {
+          console.log(`🧹 Limpando instância travada para ${accountName}...`);
           try {
             const oldClient = this.clients.get(accountId);
             await oldClient.destroy();
-            this.clients.delete(accountId);
           } catch (e) {
             console.log('Erro ao limpar cliente antigo:', e.message);
           }
+          this.clients.delete(accountId);
         }
 
         await this.initClient(accountId, true);
