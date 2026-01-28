@@ -9,8 +9,12 @@ if (!fs.existsSync(logsDir)) {
 
 const logFile = fs.createWriteStream(path.join(logsDir, 'system.log'), { flags: 'a' });
 
-// Função auxiliar para formatar data
-const getTimestamp = () => new Date().toISOString();
+// Função auxiliar para formatar data (Local Time)
+const getTimestamp = () => {
+    const now = new Date();
+    // Ajusta para o fuso horário local (respeita a ENV TZ do Docker)
+    return now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) + ' ' + now.getMilliseconds() + 'ms';
+};
 
 // Intercepta e persiste logs
 function setupLogger() {
