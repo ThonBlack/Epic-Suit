@@ -220,6 +220,16 @@ app.get('/api/stats', async (req, res) => {
     }
 });
 
+// ==================== ERROR HANDLING ====================
+
+app.use((err, req, res, next) => {
+    console.error('❌ Erro não tratado (Middleware):', err);
+    if (err instanceof multer.MulterError) {
+        return res.status(400).json({ error: `Erro no upload: ${err.message}` });
+    }
+    res.status(500).json({ error: 'Erro interno do servidor', details: err.message });
+});
+
 // ==================== SOCKET.IO ====================
 
 io.on('connection', (socket) => {
