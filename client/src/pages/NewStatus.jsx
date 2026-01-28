@@ -106,7 +106,8 @@ export default function NewStatus() {
             setTimeout(() => setSuccess(false), 5000);
         } catch (error) {
             console.error('Erro ao criar agendamento:', error);
-            setErrors(['Erro ao criar agendamento. Tente novamente.']);
+            const errorMessage = error.response?.data?.error || error.message || 'Erro desconhecido ao criar agendamento.';
+            setErrors([`Erro: ${errorMessage}`]);
         } finally {
             setLoading(false);
         }
@@ -290,13 +291,13 @@ export default function NewStatus() {
                                             type="button"
                                             onClick={() => toggleAccount(account.id)}
                                             className={`p-4 rounded-xl border-2 transition-all text-left relative ${selectedAccounts.includes(account.id)
-                                                    ? 'border-[var(--primary)] bg-[var(--primary)]/10'
-                                                    : 'border-[var(--border)] hover:border-[var(--primary)]/50'
+                                                ? 'border-[var(--primary)] bg-[var(--primary)]/10'
+                                                : 'border-[var(--border)] hover:border-[var(--primary)]/50'
                                                 }`}
                                         >
                                             <span className={`absolute top-2 right-2 w-3 h-3 rounded-full ${account.status === 'connected'
-                                                    ? 'bg-emerald-500'
-                                                    : 'bg-gray-500'
+                                                ? 'bg-emerald-500'
+                                                : 'bg-gray-500'
                                                 }`}></span>
                                             <p className="font-medium truncate pr-4">{account.name}</p>
                                             <p className="text-sm text-[var(--text-muted)] truncate">
