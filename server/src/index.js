@@ -130,12 +130,34 @@ app.post('/api/jobs', upload.single('media'), async (req, res) => {
 
         const { accountId, caption, scheduledAt, repeatType, repeatDays } = req.body;
 
+        let finalScheduledAt = new Date(scheduledAt);
+
+        // Lógica de escalonamento: verifica se já existe job neste minuto
+        // Se existir, adiciona 1 minuto até achar um horário livre
+        while (true) {
+            const conflict = await prisma.job.findFirst({
+                where: {
+                    scheduledAt: {
+                        gte: finalScheduledAt,
+                        lt: new Date(finalScheduledAt.getTime() + 60000) // Dentro do mesmo minuto
+                    }
+                }
+            });
+
+            if (!conflict) {
+                break; // Horário livre!
+            }
+
+            console.log(`⚠️ Conflito de horário em ${finalScheduledAt.toISOString()}. Adicionando 1 minuto...`);
+            finalScheduledAt = new Date(finalScheduledAt.getTime() + 60000);
+        }
+
         const job = await prisma.job.create({
             data: {
                 accountId,
                 mediaPath: req.file ? req.file.filename : null,
                 caption,
-                scheduledAt: new Date(scheduledAt),
+                scheduledAt: finalScheduledAt,
                 repeatType: repeatType || null,
                 repeatDays: repeatDays || null
             }
