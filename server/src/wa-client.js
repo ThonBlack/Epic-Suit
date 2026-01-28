@@ -175,10 +175,8 @@ class WAClientManager {
       console.error(`❌ Erro ao inicializar cliente ${account.name}:`, error.message);
       this.clients.delete(accountId);
 
-      // Se falhou ao inicializar, tenta reconectar
-      if (!isReconnect) {
-        await this.scheduleReconnect(accountId, account.name);
-      }
+      // Se falhou ao inicializar, tenta reconectar sempre (Zombie Mode ativo)
+      await this.scheduleReconnect(accountId, account.name);
       throw error;
     }
 
