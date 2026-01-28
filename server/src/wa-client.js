@@ -188,44 +188,51 @@ class WAClientManager {
   async scheduleReconnect(accountId, accountName) {
     const attempts = this.reconnectAttempts.get(accountId) || 0;
 
-    if (attempts >= this.maxReconnectAttempts) {
-      console.log(`❌ Máximo de tentativas de reconexão atingido para ${accountName}`);
-      this.reconnectAttempts.delete(accountId);
+    // Agora tenta INFINITAMENTE (ou até o usuário desconectar manualmente)
+    const delay = 30000; // Tenta a cada 30 segundos fixos
+    this.reconnectAttempts.set(accountId, attempts + 1);
 
+    console.log(`⏱️ Tentando reconectar ${accountName} em ${delay / 1000}s (tentativa ${attempts + 1})...`);
+
+    // Notifica a cada 5 tentativas para não spammar
+    if ((attempts + 1) % 5 === 0) {
       this.io.emit('notification', {
-        type: 'error',
-        title: 'Reconexão Falhou',
-        message: `Não foi possível reconectar a conta "${accountName}" após ${this.maxReconnectAttempts} tentativas. Conecte manualmente.`,
+        type: 'info',
+        title: 'Reconectando...',
+        message: `Ainda tentando reconectar "${accountName}" (Tentativa ${attempts + 1})...`,
         accountId
       });
-      return;
     }
-
-    this.reconnectAttempts.set(accountId, attempts + 1);
-    const delay = this.reconnectDelay * (attempts + 1); // Delay progressivo
-
-    console.log(`⏱️ Tentando reconectar ${accountName} em ${delay / 1000}s (tentativa ${attempts + 1}/${this.maxReconnectAttempts})`);
-
-    this.io.emit('notification', {
-      type: 'info',
-      title: 'Reconectando...',
-      message: `Tentativa ${attempts + 1}/${this.maxReconnectAttempts} de reconectar "${accountName}" em ${delay / 1000}s`,
-      accountId
-    });
 
     setTimeout(async () => {
       try {
-        // Verifica se a conta ainda existe
+        // Verifica se a conta ainda existe e não foi desconectada manualmente
         const account = await this.prisma.account.findUnique({
           where: { id: accountId }
         });
 
-        if (account) {
-          await this.initClient(accountId, true);
+        // Se a conta não existe mais ou o status foi setado para 'disconnected' PROPOSITALMENTE (pelo botão sair), para.
+        if (!account) {
+          console.log(`Reconexão cancelada para ${accountName} (conta removida)`);
+          return;
         }
+
+        // Tenta destruir instância anterior se existir para liberar locks
+        if (this.clients.has(accountId)) {
+          try {
+            const oldClient = this.clients.get(accountId);
+            await oldClient.destroy();
+            this.clients.delete(accountId);
+          } catch (e) {
+            console.log('Erro ao limpar cliente antigo:', e.message);
+          }
+        }
+
+        await this.initClient(accountId, true);
+
       } catch (error) {
         console.error(`Erro na reconexão de ${accountName}:`, error.message);
-        // Continua tentando
+        // Continua tentando infinitamente
         await this.scheduleReconnect(accountId, accountName);
       }
     }, delay);
