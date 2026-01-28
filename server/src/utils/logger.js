@@ -1,0 +1,63 @@
+const fs = require('fs');
+const path = require('path');
+const util = require('util');
+
+const logsDir = path.join(__dirname, '..', '..', 'logs');
+if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+}
+
+const logFile = fs.createWriteStream(path.join(logsDir, 'system.log'), { flags: 'a' });
+
+// Função auxiliar para formatar data
+const getTimestamp = () => new Date().toISOString();
+
+// Intercepta e persiste logs
+function setupLogger() {
+    const originalStdout = process.stdout.write;
+    const originalStderr = process.stderr.write;
+
+    // Sobrescreve stdout
+    process.stdout.write = function (chunk, encoding, callback) {
+        const timestamp = getTimestamp();
+        let logMessage = chunk.toString();
+
+        // Adiciona timestamp se não tiver (alguns logs já vêm formatados)
+        if (!logMessage.startsWith('[')) {
+            logMessage = `[${timestamp}] INFO: ${logMessage}`;
+        }
+
+        logFile.write(logMessage);
+        originalStdout.apply(process.stdout, arguments);
+    };
+
+    // Sobrescreve stderr
+    process.stderr.write = function (chunk, encoding, callback) {
+        const timestamp = getTimestamp();
+        let logMessage = chunk.toString();
+
+        if (!logMessage.startsWith('[')) {
+            logMessage = `[${timestamp}] ERROR: ${logMessage}`;
+        }
+
+        logFile.write(logMessage);
+        originalStderr.apply(process.stderr, arguments);
+    };
+
+    console.log('📝 Logger do sistema inicializado. Gravando em logs/system.log');
+}
+
+function getLogs(lines = 100) {
+    try {
+        const filePath = path.join(logsDir, 'system.log');
+        if (!fs.existsSync(filePath)) return 'Nenhum log encontrado.';
+
+        const content = fs.readFileSync(filePath, 'utf8');
+        const allLines = content.split('\n');
+        return allLines.slice(-lines).join('\n');
+    } catch (error) {
+        return `Erro ao ler logs: ${error.message}`;
+    }
+}
+
+module.exports = { setupLogger, getLogs };

@@ -49,6 +49,12 @@ const waManager = new WAClientManager(io, prisma);
 const scheduler = new Scheduler(prisma, waManager, io);
 
 // ==================== ROTAS ====================
+const { setupLogger, getLogs } = require('./utils/logger');
+
+// Inicializa logger
+setupLogger();
+
+// ==================== ROTAS ====================
 const accountsRouter = require('./routes/accounts')(prisma, waManager);
 const jobsRouter = require('./routes/jobs')(prisma, upload, uploadsDir);
 const uploadRouter = require('./routes/upload')(prisma, upload);
@@ -58,6 +64,13 @@ app.use('/api/accounts', accountsRouter);
 app.use('/api/jobs', jobsRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/stats', dashboardRouter);
+
+// Rota de logs do sistema
+app.get('/api/logs', (req, res) => {
+    const lines = req.query.lines ? parseInt(req.query.lines) : 100;
+    const logs = getLogs(lines);
+    res.send(logs);
+});
 
 // ==================== ERROR HANDLING ====================
 
