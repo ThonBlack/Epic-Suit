@@ -11,6 +11,8 @@ services:
       - ./server/uploads:/app/uploads
       - ./server/prisma:/app/prisma
       - ./server/logs:/app/logs
+    environment:
+      - TZ=America/Sao_Paulo
     restart: unless-stopped
 
   client:
