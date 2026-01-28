@@ -204,16 +204,20 @@ class WAClientManager {
 
     setTimeout(async () => {
       try {
-        // Verifica se a conta JÁ ESTÁ CONECTADA antes de fazer qualquer coisa
-        if (this.isConnected(accountId)) {
-          console.log(`✅ Conta ${accountName} já está conectada! Cancelando tentativas de reconexão.`);
-          this.reconnectAttempts.delete(accountId);
-          this.io.emit('notification', {
-            type: 'success',
-            title: 'Reconectado',
-            message: `A conta "${accountName}" reconectou com sucesso!`,
-            accountId
-          });
+        // Verifica se a conta JÁ ESTÁ CONECTADA ou se a tentativa foi limpa (sucesso/cancelamento)
+        if (this.isConnected(accountId) || !this.reconnectAttempts.has(accountId)) {
+          console.log(`✅ Conta ${accountName} estabilizada! Cancelando tentativas de reconexão.`);
+          this.reconnectAttempts.delete(accountId); // Garante limpeza
+
+          // Só notifica se realmente estiver conectado
+          if (this.isConnected(accountId)) {
+            this.io.emit('notification', {
+              type: 'success',
+              title: 'Reconectado',
+              message: `A conta "${accountName}" reconectou com sucesso!`,
+              accountId
+            });
+          }
           return;
         }
 
