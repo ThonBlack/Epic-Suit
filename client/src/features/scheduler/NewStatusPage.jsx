@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import Header from '../components/Header';
-import api from '../lib/api';
+import Header from '../../components/Header';
+import api from '../../lib/api';
 import { Upload, Calendar, Clock, Repeat, Send, Image, X, Loader2, AlertCircle } from 'lucide-react';
 
 export default function NewStatus() {

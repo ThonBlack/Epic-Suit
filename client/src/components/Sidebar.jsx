@@ -6,7 +6,8 @@ import {
     Clock,
     Settings,
     MessageCircle,
-    CalendarDays
+    CalendarDays,
+    Megaphone
 } from 'lucide-react';
 
 const navItems = [
@@ -15,6 +16,8 @@ const navItems = [
     { icon: CalendarPlus, label: 'Novo Status', path: '/new-status' },
     { icon: Clock, label: 'Agendados', path: '/scheduled' },
     { icon: CalendarDays, label: 'Calendário', path: '/calendar' },
+    { icon: MessageCircle, label: 'Auto Resposta', path: '/autoreply' },
+    { icon: Megaphone, label: 'Campanhas', path: '/campaigns' },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {

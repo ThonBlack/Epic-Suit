@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import api from '../lib/api';
-import { getAllHolidays } from '../lib/holidays';
+import Header from '../../components/Header';
+import api from '../../lib/api';
+import { getAllHolidays } from '../../lib/holidays';
 import {
     ChevronLeft,
     ChevronRight,

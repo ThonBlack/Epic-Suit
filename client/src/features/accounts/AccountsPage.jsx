@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import Header from '../components/Header';
-import api from '../lib/api';
-import socket from '../lib/socket';
-import { Plus, Smartphone, Wifi, WifiOff, Trash2, QrCode, Loader2 } from 'lucide-react';
+import Header from '../../components/Header';
+import api from '../../lib/api';
+import socket from '../../lib/socket';
+import { Plus, Smartphone, Wifi, WifiOff, Trash2, QrCode, Loader2, Shield, FileText, X } from 'lucide-react';
+import ProtectionSettings from './components/ProtectionSettings';
+import LogsTable from '../../components/LogsTable';
 
 export default function Accounts() {
     const [accounts, setAccounts] = useState([]);
@@ -11,6 +13,8 @@ export default function Accounts() {
     const [newAccountName, setNewAccountName] = useState('');
     const [qrCode, setQrCode] = useState(null);
     const [connectingId, setConnectingId] = useState(null);
+    const [settingsAccountId, setSettingsAccountId] = useState(null);
+    const [logsAccountId, setLogsAccountId] = useState(null);
 
     useEffect(() => {
         fetchAccounts();
@@ -299,12 +303,51 @@ export default function Accounts() {
                                     >
                                         <Trash2 className="w-5 h-5" />
                                     </button>
+                                    <button
+                                        onClick={() => setSettingsAccountId(account.id)}
+                                        className="p-2.5 bg-[var(--surface-light)] rounded-xl hover:bg-[var(--primary)]/20 hover:text-[var(--primary)] transition-colors"
+                                        title="Configurações de Proteção"
+                                    >
+                                        <Shield className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => setLogsAccountId(account.id)}
+                                        className="p-2.5 bg-[var(--surface-light)] rounded-xl hover:bg-blue-500/20 hover:text-blue-400 transition-colors"
+                                        title="Logs de Atividade"
+                                    >
+                                        <FileText className="w-5 h-5" />
+                                    </button>
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
+
+            {/* Protection Settings Modal */}
+            {settingsAccountId && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+                    <ProtectionSettings
+                        accountId={settingsAccountId}
+                        onClose={() => setSettingsAccountId(null)}
+                    />
+                </div>
+            )}
+
+            {/* Logs Modal */}
+            {logsAccountId && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+                    <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
+                        <button
+                            onClick={() => setLogsAccountId(null)}
+                            className="absolute top-4 right-4 p-2 bg-[var(--surface-light)] rounded-full hover:bg-[var(--border)] z-10"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        <LogsTable accountId={logsAccountId} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

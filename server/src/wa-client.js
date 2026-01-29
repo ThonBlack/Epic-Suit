@@ -8,7 +8,13 @@ class WAClientManager {
     this.clients = new Map();
     this.io = io;
     this.prisma = prisma;
-    this.sessionsPath = path.join(__dirname, '..', 'sessions');
+
+    // Caminho de sessões dinâmico
+    const userDataPath = process.env.USER_DATA_PATH;
+    this.sessionsPath = userDataPath
+      ? path.join(userDataPath, 'sessions')
+      : path.join(__dirname, '..', 'sessions');
+
     this.reconnectAttempts = new Map(); // Controla tentativas de reconexão
     this.maxReconnectAttempts = 5;
     this.reconnectDelay = 10000; // 10 segundos entre tentativas
@@ -45,13 +51,27 @@ class WAClientManager {
 
     console.log(`${isReconnect ? '🔄 Reconectando' : '🚀 Iniciando'} cliente para ${account.name}...`);
 
+    // Função para achar o Chrome no Windows
+    const getWindowsChromePath = () => {
+      const paths = [
+        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+        'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
+      ];
+      return paths.find(p => fs.existsSync(p));
+    };
+
+    const isWindows = process.platform === 'win32';
+    const chromePath = isWindows ? getWindowsChromePath() : undefined;
+
     const client = new Client({
       authStrategy: new LocalAuth({
         clientId: accountId,
         dataPath: this.sessionsPath
       }),
       puppeteer: {
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || chromePath || undefined,
         headless: true,
         args: [
           '--no-sandbox',

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import Header from '../components/Header';
-import api from '../lib/api';
+import Header from '../../components/Header';
+import api from '../../lib/api';
 import { Clock, CheckCircle, XCircle, Trash2, Loader2, Calendar, Image } from 'lucide-react';
 
 export default function Scheduled() {

@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model Account {
@@ -16,6 +16,38 @@ model Account {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   jobs        Job[]
+  autoReplies AutoReply[]
+  campaigns   Campaign[]
+
+  // Anti-Ban Protection Settings
+  dailyLimit    Int      @default(1000)
+  dailyCount    Int      @default(0)
+  lastReset     DateTime @default(now())
+  
+  minDelay      Int      @default(5)  // Min seconds
+  maxDelay      Int      @default(15) // Max seconds
+  
+  autoPause     Boolean  @default(false)
+  pauseAfter    Int      @default(50) // Messages
+  pauseDuration Int      @default(10) // Minutes
+  
+  useTyping     Boolean  @default(true) // Simulates typing
+  
+  logs          ActivityLog[]
+}
+
+model ActivityLog {
+  id         String    @id @default(uuid())
+  accountId  String?
+  campaignId String?
+  type       String    // info, warning, error
+  action     String    // 'campaign_start', 'message_sent', 'error'
+  details    String?
+  metadata   String?   // JSON
+  createdAt  DateTime  @default(now())
+  
+  account    Account?  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  campaign   Campaign? @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 }
 
 model Job {
@@ -24,13 +56,71 @@ model Job {
   account     Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
   mediaPath   String?
   caption     String?
-  scheduledAt DateTime
   status      String   @default("pending") // pending, sent, failed
-  repeatType  String?  // daily, weekly, custom
-  repeatDays  String?  // JSON array para dias da semana
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  scheduledAt DateTime
   executedAt  DateTime?
+  createdAt   DateTime @default(now())
+  
+  // Repetição
+  repeatType  String?  // daily, weekly, custom
+  repeatDays  String?  // JSON string: [1, 3, 5] (Seg, Qua, Sex)
+  updatedAt   DateTime @updatedAt
+}
+
+model AutoReply {
+  id        String   @id @default(uuid())
+  accountId String
+  trigger   String   // Texto para corresponder (Gatilho)
+  response  String   // Mensagem de resposta
+  matchType String   // 'exact', 'contains'
+  isActive  Boolean  @default(true)
+  
+  // Advanced Features
+  name      String?  // Nome para organização
+  priority  Int      @default(0) // Maior número = maior prioridade
+  delay     Int      @default(0) // Atraso em segundos
+  isGroup   Boolean  @default(false)
+  isPrivate Boolean  @default(true)
+  mediaPath String?
+  startTime String?  // "09:00"
+  endTime   String?  // "18:00"
+  createdAt DateTime @default(now())
+  account   Account  @relation(fields: [accountId], references: [id])
+}
+
+model Campaign {
+  id              String         @id @default(uuid())
+  name            String
+  status          String         @default("pending") // pending, running, paused, completed
+  messageTemplate String
+  mediaPath       String?
+  minInterval     Int            @default(15) // Seconds
+  maxInterval     Int            @default(60) // Seconds
+  scheduledAt     DateTime?
+  accountId       String
+  account         Account        @relation(fields: [accountId], references: [id])
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  items           CampaignItem[]
+  logs            ActivityLog[]
+  
+  // Testing & Simulation
+  isDryRun        Boolean        @default(false)
+  testNumber      String?
+}
+
+model CampaignItem {
+  id         String    @id @default(uuid())
+  phone      String
+  name       String?   // For variable replacement
+  status     String    @default("pending") // pending, sent, failed
+  sentAt     DateTime?
+  errorLog   String?
+  campaignId String
+  campaign   Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  @@index([campaignId, status])
 }
 
 model Media {

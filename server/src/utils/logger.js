@@ -2,7 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 
-const logsDir = path.join(__dirname, '..', '..', 'logs');
+// Caminho de logs dinâmico
+const userDataPath = process.env.USER_DATA_PATH;
+const logsDir = userDataPath
+    ? path.join(userDataPath, 'logs')
+    : path.join(__dirname, '..', '..', 'logs');
+
 if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
 }

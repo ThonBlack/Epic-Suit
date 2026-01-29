@@ -25,6 +25,30 @@ module.exports = (prisma, waManager) => {
         }
     });
 
+    // Update Account (Settings)
+    router.patch('/:id', async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { dailyLimit, minDelay, maxDelay, autoPause, pauseAfter, pauseDuration, useTyping } = req.body;
+
+            const updated = await prisma.account.update({
+                where: { id },
+                data: {
+                    dailyLimit,
+                    minDelay,
+                    maxDelay,
+                    autoPause,
+                    pauseAfter,
+                    pauseDuration,
+                    useTyping
+                }
+            });
+            res.json(updated);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
     // Conectar conta (inicia cliente WhatsApp)
     router.post('/:id/connect', async (req, res) => {
         try {

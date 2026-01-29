@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import Header from '../components/Header';
-import api from '../lib/api';
+import Header from '../../components/Header';
+import api from '../../lib/api';
 import { Smartphone, Clock, CheckCircle, Zap } from 'lucide-react';
 
 export default function Dashboard() {

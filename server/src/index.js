@@ -7,16 +7,17 @@ const path = require('path');
 const fs = require('fs');
 const { PrismaClient } = require('@prisma/client');
 
-const WAClientManager = require('./wa-client');
-const Scheduler = require('./scheduler');
+// Import Core
+const WhatsAppService = require('./core/WhatsAppService');
+const ModuleManager = require('./core/ModuleManager');
+
+// Importar Logger (mantido anterior)
+const { setupLogger, getLogs } = require('./utils/logger');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: '*',
-        methods: ['GET', 'POST', 'PUT', 'DELETE']
-    }
+    cors: { origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] }
 });
 
 const prisma = new PrismaClient();
@@ -25,91 +26,75 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
 
-// Diretório de uploads
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// Setup Uploads
+const userDataPath = process.env.USER_DATA_PATH;
+const uploadsDir = userDataPath ? path.join(userDataPath, 'uploads') : path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 app.use('/uploads', express.static(uploadsDir));
 
-// Configuração do Multer
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage });
-
-// Inicializa gerenciadores
-const waManager = new WAClientManager(io, prisma);
-const scheduler = new Scheduler(prisma, waManager, io);
-
-// ==================== ROTAS ====================
-const { setupLogger, getLogs } = require('./utils/logger');
-
-// Inicializa logger
+// Logger
 setupLogger();
 
-// ==================== ROTAS ====================
-const accountsRouter = require('./routes/accounts')(prisma, waManager);
-const jobsRouter = require('./routes/jobs')(prisma, upload, uploadsDir);
-const uploadRouter = require('./routes/upload')(prisma, upload);
-const dashboardRouter = require('./routes/dashboard')(prisma);
+// ==================== CORE SERVICES ====================
+const waService = new WhatsAppService(io, prisma);
+const moduleManager = new ModuleManager(app, io, prisma, waService);
 
+// ==================== LEGACY ROUTES (MANTIDAS SE NECESSÁRIO) ====================
+// Accounts router ainda é "core" o suficiente para ficar aqui, ou poderia virar módulo.
+// Por simplicidade, mantere ele aqui mas ajustado para usar waService
+const accountsRouter = require('./routes/accounts')(prisma, waService);
 app.use('/api/accounts', accountsRouter);
-app.use('/api/jobs', jobsRouter);
-app.use('/api/upload', uploadRouter);
+
+const dashboardRouter = require('./routes/dashboard')(prisma);
 app.use('/api/stats', dashboardRouter);
 
-// Rota de logs do sistema
+// Upload router (genérico)
+// Precisamos recriar o multer aqui para o upload genérico se o routes/upload.js precisar
+// Mas o routes/upload.js original recebe (prisma, upload).
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadsDir),
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname))
+});
+const upload = multer({ storage });
+const uploadRouter = require('./routes/upload')(prisma, upload);
+app.use('/api/upload', uploadRouter);
+
+// Logs
 app.get('/api/logs', (req, res) => {
-    const lines = req.query.lines ? parseInt(req.query.lines) : 100;
-    const logs = getLogs(lines);
-    res.send(logs);
+    res.send(getLogs(req.query.lines ? parseInt(req.query.lines) : 100));
 });
 
-// ==================== ERROR HANDLING ====================
+// ==================== LOAD MODULES ====================
+(async () => {
+    await moduleManager.loadModules();
+})();
 
+// ==================== ERROR HANDLING ====================
 app.use((err, req, res, next) => {
-    console.error('❌ Erro não tratado (Middleware):', err);
-    if (err instanceof multer.MulterError) {
-        return res.status(400).json({ error: `Erro no upload: ${err.message}` });
-    }
-    res.status(500).json({ error: 'Erro interno do servidor', details: err.message });
+    console.error('❌ Erro não tratado:', err);
+    res.status(500).json({ error: 'Erro interno', details: err.message });
 });
 
 // ==================== SOCKET.IO ====================
-
 io.on('connection', (socket) => {
     console.log('Cliente conectado via Socket.IO');
-
-    socket.on('disconnect', () => {
-        console.log('Cliente desconectado');
-    });
 });
 
-// ==================== INICIALIZAÇÃO ====================
-
+// ==================== START ====================
 const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, async () => {
-    console.log(`🚀 Servidor rodando na porta ${PORT}`);
-    scheduler.start();
+    console.log(`🚀 Servidor Modular rodando na porta ${PORT}`);
 
-    // Inicia automaticamente os clientes WhatsApp salvos
+    // Inicia clientes salvos
     setTimeout(async () => {
-        await waManager.initAllSavedClients();
+        await waService.initAllSavedClients();
     }, 2000);
 });
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
     console.log('Encerrando servidor...');
-    scheduler.stop();
     await prisma.$disconnect();
     process.exit(0);
 });

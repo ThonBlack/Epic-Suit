@@ -36,3 +36,8 @@ npm-debug.log*
 # Cache
 .cache/
 .vite/
+
+# Epic Suit Builds
+dist-build/
+release-build/
+client/dist-build/
