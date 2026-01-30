@@ -14,7 +14,16 @@ class CampaignService {
 
     startQueueProcessor() {
         console.log('🔄 Iniciando processador de fila de campanhas...');
-        setInterval(() => this.processQueue(), this.processingInterval);
+        // Usa setTimeout recursivo ao invés de setInterval
+        // para evitar sobreposição de execuções (race condition)
+        this.scheduleNextProcess();
+    }
+
+    scheduleNextProcess() {
+        setTimeout(async () => {
+            await this.processQueue();
+            this.scheduleNextProcess();
+        }, this.processingInterval);
     }
 
     async createCampaign(data, files) {
@@ -270,11 +279,18 @@ class CampaignService {
 
         if (!campaign) return null;
 
+        // Otimizado: Usa groupBy para fazer 1 query ao invés de 4
+        const statusCounts = await this.prisma.campaignItem.groupBy({
+            by: ['status'],
+            where: { campaignId: id },
+            _count: { id: true }
+        });
+
         const stats = {
-            total: await this.prisma.campaignItem.count({ where: { campaignId: id } }),
-            pending: await this.prisma.campaignItem.count({ where: { campaignId: id, status: 'pending' } }),
-            sent: await this.prisma.campaignItem.count({ where: { campaignId: id, status: 'sent' } }),
-            failed: await this.prisma.campaignItem.count({ where: { campaignId: id, status: 'failed' } }),
+            total: statusCounts.reduce((acc, s) => acc + s._count.id, 0),
+            pending: statusCounts.find(s => s.status === 'pending')?._count.id || 0,
+            sent: statusCounts.find(s => s.status === 'sent')?._count.id || 0,
+            failed: statusCounts.find(s => s.status === 'failed')?._count.id || 0,
         };
 
         return { ...campaign, stats };

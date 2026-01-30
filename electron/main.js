@@ -1,4 +1,5 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const { fork } = require('child_process');
 const fs = require('fs');
@@ -23,6 +24,71 @@ const logsPath = path.join(userDataPath, 'logs');
     }
 });
 
+// ==================== AUTO-UPDATE ====================
+function setupAutoUpdater() {
+    if (isDev) {
+        console.log('🔧 Modo desenvolvimento - Auto-updater desabilitado');
+        return;
+    }
+
+    // Configura logs do auto-updater
+    autoUpdater.logger = require('electron-log');
+    autoUpdater.logger.transports.file.level = 'info';
+
+    // Verifica atualizações ao iniciar
+    autoUpdater.checkForUpdatesAndNotify();
+
+    // Eventos do auto-updater
+    autoUpdater.on('checking-for-update', () => {
+        console.log('🔍 Verificando atualizações...');
+    });
+
+    autoUpdater.on('update-available', (info) => {
+        console.log('📦 Nova versão disponível:', info.version);
+        dialog.showMessageBox(mainWindow, {
+            type: 'info',
+            title: 'Atualização Disponível',
+            message: `Uma nova versão (${info.version}) está disponível!`,
+            detail: 'A atualização será baixada em segundo plano.',
+            buttons: ['OK']
+        });
+    });
+
+    autoUpdater.on('update-not-available', () => {
+        console.log('✅ Você está usando a versão mais recente.');
+    });
+
+    autoUpdater.on('download-progress', (progress) => {
+        const msg = `Download: ${Math.round(progress.percent)}%`;
+        console.log(msg);
+        if (mainWindow) {
+            mainWindow.setProgressBar(progress.percent / 100);
+        }
+    });
+
+    autoUpdater.on('update-downloaded', (info) => {
+        console.log('✅ Atualização baixada:', info.version);
+        mainWindow.setProgressBar(-1); // Remove barra de progresso
+
+        dialog.showMessageBox(mainWindow, {
+            type: 'question',
+            title: 'Atualização Pronta',
+            message: 'A atualização foi baixada com sucesso!',
+            detail: 'Deseja reiniciar o aplicativo agora para aplicar a atualização?',
+            buttons: ['Reiniciar Agora', 'Depois']
+        }).then((result) => {
+            if (result.response === 0) {
+                autoUpdater.quitAndInstall();
+            }
+        });
+    });
+
+    autoUpdater.on('error', (err) => {
+        console.error('❌ Erro no auto-updater:', err.message);
+    });
+}
+
+// ==================== SERVER ====================
 function startServer() {
     const serverDir = isDev
         ? path.join(__dirname, '../server')
@@ -52,7 +118,7 @@ function startServer() {
     const env = {
         ...process.env,
         PORT: SERVER_PORT,
-        USER_DATA_PATH: userDataPath, // Passa o caminho pro servidor
+        USER_DATA_PATH: userDataPath,
         DATABASE_URL: `file:${targetDbFile}`,
         NODE_ENV: isDev ? 'development' : 'production'
     };
@@ -66,6 +132,7 @@ function startServer() {
     serverProcess.stderr.on('data', (data) => console.error(`[SERVER ERR]: ${data}`));
 }
 
+// ==================== WINDOW ====================
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
@@ -82,15 +149,15 @@ function createWindow() {
         mainWindow.loadURL('http://localhost:5173');
         mainWindow.webContents.openDevTools();
     } else {
-        // Em produção, carrega o index.html compilado
         mainWindow.loadFile(path.join(__dirname, '../client/dist-build/index.html'));
-        // mainWindow.webContents.openDevTools();
     }
 }
 
+// ==================== APP LIFECYCLE ====================
 app.whenReady().then(() => {
     startServer();
     createWindow();
+    setupAutoUpdater(); // Inicia verificação de atualizações
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {

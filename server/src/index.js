@@ -14,10 +14,39 @@ const ModuleManager = require('./core/ModuleManager');
 // Importar Logger (mantido anterior)
 const { setupLogger, getLogs } = require('./utils/logger');
 
+// Importar Middlewares
+const rateLimiter = require('./middleware/rateLimiter');
+const errorHandler = require('./middleware/errorHandler');
+
 const app = express();
 const server = http.createServer(app);
+
+// Configuração de CORS para Socket.IO
+// Em produção: restringe origin; Em desenvolvimento: permite localhost
+const getAllowedOrigins = () => {
+    if (process.env.NODE_ENV === 'production') {
+        // Em Electron, o origin será file:// ou o app:// scheme
+        return ['file://', 'app://'];
+    }
+    // Em desenvolvimento, permite localhost nas portas comuns
+    return ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'];
+};
+
 const io = new Server(server, {
-    cors: { origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] }
+    cors: {
+        origin: (origin, callback) => {
+            // Permite requests sem origin (como Electron) ou origins permitidos
+            if (!origin || getAllowedOrigins().some(allowed => origin.startsWith(allowed))) {
+                callback(null, true);
+            } else if (process.env.NODE_ENV !== 'production') {
+                // Em dev, permite qualquer origin para facilitar testes
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
+    }
 });
 
 const prisma = new PrismaClient();
@@ -25,6 +54,7 @@ const prisma = new PrismaClient();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(rateLimiter); // Rate limiting em todas as rotas
 
 // Setup Uploads
 const userDataPath = process.env.USER_DATA_PATH;
@@ -70,10 +100,7 @@ app.get('/api/logs', (req, res) => {
 })();
 
 // ==================== ERROR HANDLING ====================
-app.use((err, req, res, next) => {
-    console.error('❌ Erro não tratado:', err);
-    res.status(500).json({ error: 'Erro interno', details: err.message });
-});
+app.use(errorHandler);
 
 // ==================== SOCKET.IO ====================
 io.on('connection', (socket) => {

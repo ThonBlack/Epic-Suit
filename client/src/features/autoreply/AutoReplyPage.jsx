@@ -78,19 +78,31 @@ export default function AutoReplyPage() {
 
             <div className="p-6">
                 {/* Account Selector */}
-                <div className="mb-6 flex items-center gap-4 overflow-x-auto pb-2">
-                    {accounts.map(acc => (
-                        <button
-                            key={acc.id}
-                            onClick={() => setSelectedAccount(acc.id)}
-                            className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all ${selectedAccount === acc.id
-                                ? 'gradient-primary font-medium shadow-lg shadow-[var(--primary)]/20'
-                                : 'bg-[var(--surface-light)] hover:bg-[var(--border)]'
-                                }`}
-                        >
-                            {acc.name}
-                        </button>
-                    ))}
+                <div className="mb-6">
+                    <label className="text-sm text-[var(--text-muted)] mb-2 block">
+                        Selecione a conta para gerenciar as regras:
+                    </label>
+                    {accounts.length === 0 ? (
+                        <div className="text-amber-400 bg-amber-500/10 px-4 py-3 rounded-xl text-sm">
+                            ⚠️ Nenhuma conta cadastrada. <a href="/accounts" className="underline font-medium">Adicione uma conta primeiro.</a>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-3 overflow-x-auto pb-2">
+                            {accounts.map(acc => (
+                                <button
+                                    key={acc.id}
+                                    onClick={() => setSelectedAccount(acc.id)}
+                                    className={`px-4 py-2.5 rounded-xl whitespace-nowrap transition-all flex items-center gap-2 ${selectedAccount === acc.id
+                                        ? 'gradient-primary font-medium shadow-lg shadow-[var(--primary)]/20'
+                                        : 'bg-[var(--surface-light)] border border-[var(--border)] hover:border-[var(--primary)]'
+                                        }`}
+                                >
+                                    <span className={`w-2 h-2 rounded-full ${acc.status === 'connected' ? 'bg-emerald-400' : 'bg-gray-500'}`}></span>
+                                    {acc.name}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex justify-between items-center mb-6">
@@ -122,8 +134,8 @@ export default function AutoReplyPage() {
                                             </span>
                                         )}
                                         <span className={`text-xs px-2 py-0.5 rounded-full ${rule.matchType === 'exact' ? 'bg-blue-500/20 text-blue-400' :
-                                                rule.matchType === 'regex' ? 'bg-pink-500/20 text-pink-400' :
-                                                    'bg-purple-500/20 text-purple-400'
+                                            rule.matchType === 'regex' ? 'bg-pink-500/20 text-pink-400' :
+                                                'bg-purple-500/20 text-purple-400'
                                             }`}>
                                             {rule.matchType === 'exact' ? 'Exato' : rule.matchType === 'regex' ? 'Regex' : 'Contém'}
                                         </span>

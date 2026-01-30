@@ -36,10 +36,18 @@ class SchedulerService {
             const jobsToProcess = pendingJobs.filter(job => !this.processingJobs.has(job.id));
 
             for (const job of jobsToProcess) {
+                // Marca como em processamento
                 this.processingJobs.add(job.id);
-                this.executeJob(job).finally(() => {
-                    this.processingJobs.delete(job.id);
-                });
+
+                // Usa Promise.resolve para garantir que finally sempre execute
+                Promise.resolve()
+                    .then(() => this.executeJob(job))
+                    .catch(error => {
+                        console.error(`❌ Erro ao processar job ${job.id}:`, error.message);
+                    })
+                    .finally(() => {
+                        this.processingJobs.delete(job.id);
+                    });
             }
         } catch (error) {
             console.error('Erro no Scheduler:', error);

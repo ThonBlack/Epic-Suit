@@ -205,14 +205,32 @@ class WhatsAppService extends EventEmitter {
 
     async scheduleReconnect(accountId, accountName) {
         const attempts = this.reconnectAttempts.get(accountId) || 0;
-        const delay = 30000;
+
+        // Backoff exponencial com jitter
+        const baseDelay = 30000; // 30 segundos base
+        const maxDelay = 300000; // 5 minutos máximo
+        const jitter = Math.random() * 5000; // 0-5s de variação aleatória
+        const delay = Math.min(baseDelay * Math.pow(1.5, attempts), maxDelay) + jitter;
+
         this.reconnectAttempts.set(accountId, attempts + 1);
 
-        console.log(`⏱️ Reconectando ${accountName} em ${delay / 1000}s (Tentativa ${attempts + 1})...`);
+        console.log(`⏱️ Reconectando ${accountName} em ${Math.round(delay / 1000)}s (Tentativa ${attempts + 1})...`);
+
+        // Notifica a cada 5 tentativas para não spammar
+        if ((attempts + 1) % 5 === 0) {
+            this.io.emit('notification', {
+                type: 'info',
+                title: 'Reconectando...',
+                message: `Ainda tentando reconectar "${accountName}" (Tentativa ${attempts + 1})...`,
+                accountId
+            });
+        }
 
         setTimeout(async () => {
             try {
                 if (this.isConnected(accountId) || !this.reconnectAttempts.has(accountId)) {
+                    console.log(`✅ ${accountName} já conectado ou reconexão cancelada.`);
+                    this.reconnectAttempts.delete(accountId);
                     return;
                 }
 
@@ -222,12 +240,15 @@ class WhatsAppService extends EventEmitter {
 
                 if (!account) {
                     console.log(`Conta removida, cancelando reconexão.`);
+                    this.reconnectAttempts.delete(accountId);
                     return;
                 }
 
                 if (this.clients.has(accountId)) {
                     try {
-                        await this.clients.get(accountId).destroy();
+                        const oldClient = this.clients.get(accountId);
+                        oldClient.removeAllListeners(); // Limpa listeners para evitar vazamento
+                        await oldClient.destroy();
                     } catch (e) { }
                     this.clients.delete(accountId);
                 }
