@@ -39,5 +39,6 @@ npm-debug.log*
 
 # Epic Suit Builds
 dist-build/
+dist-v2/
 release-build/
 client/dist-build/
