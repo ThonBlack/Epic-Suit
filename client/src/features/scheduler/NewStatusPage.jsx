@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import api from '../../lib/api';
 import { Upload, Calendar, Clock, Repeat, Send, Image, X, Loader2, AlertCircle } from 'lucide-react';
@@ -272,12 +273,12 @@ export default function NewStatus() {
                                 <p className="text-[var(--text-muted)] mb-4">
                                     Nenhuma conta cadastrada.
                                 </p>
-                                <a
-                                    href="/accounts"
+                                <Link
+                                    to="/accounts"
                                     className="inline-flex items-center gap-2 px-4 py-2 gradient-primary rounded-lg text-sm font-medium"
                                 >
                                     Adicionar Conta
-                                </a>
+                                </Link>
                             </div>
                         ) : (
                             <>

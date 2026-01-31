@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import api from '../../lib/api';
 import { Plus, MessageSquare, Trash2, Power, PowerOff, Loader2, Clock, Shield, Users, User, Zap } from 'lucide-react';
@@ -84,7 +85,7 @@ export default function AutoReplyPage() {
                     </label>
                     {accounts.length === 0 ? (
                         <div className="text-amber-400 bg-amber-500/10 px-4 py-3 rounded-xl text-sm">
-                            ⚠️ Nenhuma conta cadastrada. <a href="/accounts" className="underline font-medium">Adicione uma conta primeiro.</a>
+                            ⚠️ Nenhuma conta cadastrada. <Link to="/accounts" className="underline font-medium">Adicione uma conta primeiro.</Link>
                         </div>
                     ) : (
                         <div className="flex items-center gap-3 overflow-x-auto pb-2">

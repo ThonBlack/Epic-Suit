@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import api from '../../lib/api';
 import {
@@ -191,34 +192,34 @@ export default function Dashboard() {
                     <div className="glass rounded-2xl p-6">
                         <h3 className="text-lg font-semibold mb-4">Ações Rápidas</h3>
                         <div className="grid grid-cols-2 gap-3">
-                            <a
-                                href="/accounts"
+                            <Link
+                                to="/accounts"
                                 className="p-4 bg-[var(--surface-light)] rounded-xl border border-[var(--border)] hover:border-[var(--primary)] transition-all group text-center"
                             >
                                 <Smartphone className="w-6 h-6 mb-2 mx-auto text-emerald-500 group-hover:scale-110 transition-transform" />
                                 <span className="text-sm font-medium">Contas</span>
-                            </a>
-                            <a
-                                href="/new-status"
+                            </Link>
+                            <Link
+                                to="/new-status"
                                 className="p-4 bg-[var(--surface-light)] rounded-xl border border-[var(--border)] hover:border-[var(--primary)] transition-all group text-center"
                             >
                                 <Clock className="w-6 h-6 mb-2 mx-auto text-amber-500 group-hover:scale-110 transition-transform" />
                                 <span className="text-sm font-medium">Agendar Status</span>
-                            </a>
-                            <a
-                                href="/campaigns/new"
+                            </Link>
+                            <Link
+                                to="/campaigns/new"
                                 className="p-4 bg-[var(--surface-light)] rounded-xl border border-[var(--border)] hover:border-[var(--primary)] transition-all group text-center"
                             >
                                 <Megaphone className="w-6 h-6 mb-2 mx-auto text-violet-500 group-hover:scale-110 transition-transform" />
                                 <span className="text-sm font-medium">Nova Campanha</span>
-                            </a>
-                            <a
-                                href="/autoreply"
+                            </Link>
+                            <Link
+                                to="/autoreply"
                                 className="p-4 bg-[var(--surface-light)] rounded-xl border border-[var(--border)] hover:border-[var(--primary)] transition-all group text-center"
                             >
                                 <MessageCircle className="w-6 h-6 mb-2 mx-auto text-blue-500 group-hover:scale-110 transition-transform" />
                                 <span className="text-sm font-medium">Auto Resposta</span>
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -234,7 +235,7 @@ export default function Dashboard() {
                             {stats.recentActivity.slice(0, 5).map((log, index) => (
                                 <div key={index} className="flex items-center gap-3 p-3 bg-[var(--surface-light)] rounded-lg">
                                     <div className={`w-2 h-2 rounded-full ${log.type === 'error' ? 'bg-red-500' :
-                                            log.type === 'warning' ? 'bg-yellow-500' : 'bg-emerald-500'
+                                        log.type === 'warning' ? 'bg-yellow-500' : 'bg-emerald-500'
                                         }`}></div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm truncate">{log.action}</p>
