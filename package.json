@@ -1,7 +1,7 @@
 {
     "name": "epic-suit-desktop",
     "productName": "Epic Suit",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "WhatsApp Status Scheduler Desktop App",
     "main": "electron/main.js",
     "scripts": {
@@ -32,7 +32,7 @@
         },
         "win": {
             "target": "nsis",
-            "icon": "client/public/favicon.ico"
+            "icon": "build/icon.png"
         },
         "nsis": {
             "oneClick": false,

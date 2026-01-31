@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import api from '../../lib/api';
-import { Upload, Clock, Send, Loader2, AlertCircle } from 'lucide-react';
+import { Upload, Clock, Send, Loader2, AlertCircle, Download } from 'lucide-react';
 
 export default function CampaignCreatePage() {
     const navigate = useNavigate();
@@ -100,7 +100,17 @@ export default function CampaignCreatePage() {
                         <h3 className="text-lg font-semibold mb-4">Configuração de Envio</h3>
 
                         <div className="mb-4">
-                            <label className="block text-sm text-[var(--text-muted)] mb-1">Arquivo de Contatos (.csv)</label>
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="block text-sm text-[var(--text-muted)]">Arquivo de Contatos (.csv)</label>
+                                <a
+                                    href="/templates/modelo_contatos.csv"
+                                    download="modelo_contatos.csv"
+                                    className="inline-flex items-center gap-1 text-xs text-[var(--primary)] hover:underline"
+                                >
+                                    <Download className="w-3 h-3" />
+                                    Baixar modelo
+                                </a>
+                            </div>
                             <div className="border-2 border-dashed border-[var(--border)] rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:border-[var(--primary)] transition-colors relative">
                                 <input
                                     type="file"
