@@ -2,11 +2,20 @@ const express = require('express');
 const router = express.Router();
 
 module.exports = (prisma, waManager) => {
-    // Listar todas as contas
+    // Listar todas as contas com status real de conexão
     router.get('/', async (req, res) => {
         try {
-            const accounts = await waManager.getStatus();
-            res.json(accounts);
+            const accounts = await prisma.account.findMany({
+                orderBy: { createdAt: 'desc' }
+            });
+
+            // Adiciona status real de conexão do WhatsApp
+            const accountsWithStatus = accounts.map(account => ({
+                ...account,
+                status: waManager.isConnected(account.id) ? 'connected' : account.status
+            }));
+
+            res.json(accountsWithStatus);
         } catch (error) {
             res.status(500).json({ error: error.message });
         }

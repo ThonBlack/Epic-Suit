@@ -110,8 +110,8 @@ io.on('connection', (socket) => {
 // ==================== START ====================
 const PORT = process.env.PORT || 3001;
 
-server.listen(PORT, async () => {
-    console.log(`🚀 Servidor Modular rodando na porta ${PORT}`);
+server.listen(PORT, '0.0.0.0', async () => {
+    console.log(`🚀 Servidor Modular rodando na porta ${PORT} (0.0.0.0)`);
 
     // Inicia clientes salvos
     setTimeout(async () => {

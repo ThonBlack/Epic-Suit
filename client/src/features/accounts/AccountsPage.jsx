@@ -52,12 +52,23 @@ export default function Accounts() {
 
     const fetchAccounts = async () => {
         try {
+            setLoading(true);
             const response = await api.get('/accounts');
-            setAccounts(response.data);
-            return response.data; // Retorna para uso no Manual Check
+            console.log('API Accounts Response:', response.data);
+
+            if (Array.isArray(response.data)) {
+                setAccounts(response.data);
+                return response.data;
+            } else {
+                console.error('Resposta inválida da API:', response.data);
+                setAccounts([]);
+                alert('Erro: Servidor retornou formato inválido de dados');
+            }
         } catch (error) {
             console.error('Erro ao buscar contas:', error);
-            return [];
+            const msg = error.response?.data?.error || error.message;
+            alert(`Erro ao carregar contas: ${msg}`);
+            setAccounts([]);
         } finally {
             setLoading(false);
         }

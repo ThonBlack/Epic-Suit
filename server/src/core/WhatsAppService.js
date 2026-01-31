@@ -79,9 +79,14 @@ class WhatsAppService extends EventEmitter {
                     '--disable-accelerated-2d-canvas',
                     '--no-first-run',
                     '--no-zygote',
-                    '--single-process',
-                    '--disable-gpu'
+                    '--disable-gpu',
+                    '--disable-software-rasterizer',
+                    '--disable-extensions'
                 ]
+            },
+            webVersionCache: {
+                type: 'remote',
+                remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
             }
         });
 
