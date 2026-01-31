@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parse');
+const XLSX = require('xlsx');
 
 class CampaignService {
     constructor({ prisma, waService, io, logService }) {
@@ -38,10 +39,14 @@ class CampaignService {
             csvPath = files.csv[0].path;
         }
 
-        if (!csvPath) throw new Error('Arquivo CSV é obrigatório');
+        if (!csvPath) throw new Error('Arquivo de contatos é obrigatório');
 
-        // Parse CSV
-        const contacts = await this.parseCSV(csvPath);
+        // Parse file (CSV or XLSX)
+        const contacts = await this.parseContactsFile(csvPath);
+
+        if (contacts.length === 0) {
+            throw new Error('Nenhum contato válido encontrado no arquivo. Verifique se há colunas de telefone e nome.');
+        }
 
         // Create Campaign
         const campaign = await this.prisma.campaign.create({
@@ -63,23 +68,130 @@ class CampaignService {
             include: { items: true }
         });
 
-        // Cleanup CSV file
+        // Cleanup uploaded file
         try { fs.unlinkSync(csvPath); } catch (e) { }
 
+        console.log(`✅ Campanha criada: ${contacts.length} contatos importados`);
         return campaign;
+    }
+
+    /**
+     * Parser inteligente que suporta CSV e XLSX
+     * Detecta automaticamente as colunas de nome e telefone
+     */
+    async parseContactsFile(filePath) {
+        const ext = path.extname(filePath).toLowerCase();
+
+        let rows = [];
+
+        // Ler arquivo baseado na extensão
+        if (ext === '.xlsx' || ext === '.xls') {
+            rows = this.parseExcel(filePath);
+        } else {
+            rows = await this.parseCSV(filePath);
+        }
+
+        if (rows.length === 0) return [];
+
+        // Detectar colunas automaticamente
+        const headers = Object.keys(rows[0]).map(h => h.toLowerCase().trim());
+
+        // Padrões para detectar coluna de telefone
+        const phonePatterns = ['phone', 'telefone', 'celular', 'whatsapp', 'numero', 'número', 'fone', 'tel', 'mobile', 'contato'];
+        // Padrões para detectar coluna de nome
+        const namePatterns = ['name', 'nome', 'cliente', 'contato', 'pessoa', 'destinatario', 'destinatário'];
+
+        let phoneCol = null;
+        let nameCol = null;
+
+        // Encontrar colunas
+        for (const header of headers) {
+            if (!phoneCol && phonePatterns.some(p => header.includes(p))) {
+                phoneCol = Object.keys(rows[0]).find(k => k.toLowerCase().trim() === header);
+            }
+            if (!nameCol && namePatterns.some(p => header.includes(p))) {
+                nameCol = Object.keys(rows[0]).find(k => k.toLowerCase().trim() === header);
+            }
+        }
+
+        // Se não encontrou por nome, tenta detectar por conteúdo
+        if (!phoneCol || !nameCol) {
+            const firstRow = rows[0];
+            for (const [key, value] of Object.entries(firstRow)) {
+                const strValue = String(value || '').trim();
+
+                // Detectar telefone: apenas números, 8-15 dígitos
+                if (!phoneCol && /^[\d\s\-\(\)\+]+$/.test(strValue)) {
+                    const digits = strValue.replace(/\D/g, '');
+                    if (digits.length >= 8 && digits.length <= 15) {
+                        phoneCol = key;
+                    }
+                }
+
+                // Detectar nome: texto sem muitos números, não é telefone
+                if (!nameCol && strValue.length > 0 && !/^\d+$/.test(strValue) && key !== phoneCol) {
+                    nameCol = key;
+                }
+            }
+        }
+
+        console.log(`📊 Colunas detectadas - Telefone: "${phoneCol || 'não encontrado'}", Nome: "${nameCol || 'não encontrado'}"`);
+
+        // Processar contatos
+        const contacts = [];
+        for (const row of rows) {
+            let phone = phoneCol ? String(row[phoneCol] || '').trim() : '';
+            let fullName = nameCol ? String(row[nameCol] || '').trim() : '';
+
+            // Limpar telefone (apenas dígitos)
+            phone = phone.replace(/\D/g, '');
+
+            // Validar telefone (mínimo 8 dígitos)
+            if (phone.length < 8) continue;
+
+            // Adicionar 55 se for número brasileiro sem DDI
+            if (phone.length <= 11 && !phone.startsWith('55')) {
+                phone = '55' + phone;
+            }
+
+            // Extrair primeiro nome
+            const firstName = fullName.split(/\s+/)[0] || '';
+
+            contacts.push({
+                phone,
+                name: fullName,
+                firstName
+            });
+        }
+
+        return contacts;
+    }
+
+    parseExcel(filePath) {
+        try {
+            const workbook = XLSX.readFile(filePath);
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const data = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+            return data;
+        } catch (error) {
+            console.error('Erro ao ler Excel:', error.message);
+            throw new Error(`Erro ao ler arquivo Excel: ${error.message}`);
+        }
     }
 
     async parseCSV(filePath) {
         const content = fs.readFileSync(filePath, 'utf-8');
         return new Promise((resolve, reject) => {
-            csv.parse(content, { columns: true, trim: true, skip_empty_lines: true }, (err, records) => {
-                if (err) return reject(err);
-                // Validate records
-                const validRecords = records.filter(r => r.phone).map(r => ({
-                    phone: r.phone.replace(/\D/g, ''),
-                    name: r.name || r.nome || ''
-                }));
-                resolve(validRecords);
+            csv.parse(content, {
+                columns: true,
+                trim: true,
+                skip_empty_lines: true,
+                relax_quotes: true,
+                relax_column_count: true
+            }, (err, records) => {
+                if (err) return reject(new Error(`Erro ao ler CSV: ${err.message}`));
+                resolve(records);
             });
         });
     }
@@ -206,9 +318,13 @@ class CampaignService {
 
     async sendItem(campaign, item) {
         try {
+            // Extrair primeiro nome do nome completo
+            const firstName = (item.name || '').split(/\s+/)[0] || '';
+
             // Replace variables
             let message = campaign.messageTemplate
                 .replace(/{nome}/gi, item.name || '')
+                .replace(/{primeiro_nome}/gi, firstName)
                 .replace(/{telefone}/gi, item.phone)
                 .replace(/{data}/gi, new Date().toLocaleDateString('pt-BR'));
 

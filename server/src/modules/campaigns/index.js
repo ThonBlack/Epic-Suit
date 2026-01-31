@@ -1,3 +1,5 @@
+const CampaignService = require('./service');
+const CampaignRoutes = require('./routes');
 const LogService = require('../logs/service'); // Cross-module import
 
 class CampaignModule {

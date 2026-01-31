@@ -101,7 +101,7 @@ export default function CampaignCreatePage() {
 
                         <div className="mb-4">
                             <div className="flex items-center justify-between mb-1">
-                                <label className="block text-sm text-[var(--text-muted)]">Arquivo de Contatos (.csv)</label>
+                                <label className="block text-sm text-[var(--text-muted)]">Arquivo de Contatos (.csv ou .xlsx)</label>
                                 <a
                                     href="/templates/modelo_contatos.csv"
                                     download="modelo_contatos.csv"
@@ -114,15 +114,15 @@ export default function CampaignCreatePage() {
                             <div className="border-2 border-dashed border-[var(--border)] rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:border-[var(--primary)] transition-colors relative">
                                 <input
                                     type="file"
-                                    accept=".csv"
+                                    accept=".csv,.xlsx,.xls"
                                     onChange={e => setCsvFile(e.target.files[0])}
                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                 />
                                 <Upload className="w-8 h-8 text-[var(--text-muted)] mb-2" />
                                 <span className="text-sm font-medium">
-                                    {csvFile ? csvFile.name : 'Clique para enviar CSV'}
+                                    {csvFile ? csvFile.name : 'Clique para enviar planilha'}
                                 </span>
-                                <span className="text-xs text-[var(--text-muted)] mt-1">Colunas necessárias: phone, name</span>
+                                <span className="text-xs text-[var(--text-muted)] mt-1">CSV ou Excel • Colunas detectadas automaticamente</span>
                             </div>
                         </div>
 
@@ -207,7 +207,7 @@ export default function CampaignCreatePage() {
                                 required
                             />
                             <p className="text-xs text-[var(--text-muted)] mt-2">
-                                Variáveis: <code>{'{nome}'}</code>, <code>{'{telefone}'}</code>, <code>{'{data}'}</code>. Spintax: <code>{'{Olá|Oi}'}</code>
+                                Variáveis: <code>{'{nome}'}</code>, <code>{'{primeiro_nome}'}</code>, <code>{'{telefone}'}</code>, <code>{'{data}'}</code>. Spintax: <code>{'{Olá|Oi}'}</code>
                             </p>
                         </div>
 
